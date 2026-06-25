@@ -44,6 +44,27 @@ class TestWhitespaceDifference:
         assert "bar" in new
 
 
+class TestWhitespaceBoundaryPreservation:
+    """Regression for #52491: the whitespace_normalized strategy must not
+    swallow the word-boundary space that separates the match from the token
+    that follows it."""
+
+    def test_boundary_space_preserved_minimal(self):
+        new, count, _, err = fuzzy_find_and_replace("foo   bar baz", "foo bar", "XY")
+        assert err is None
+        assert count == 1
+        assert new == "XY baz"
+
+    def test_boundary_space_preserved_realistic(self):
+        content = "result = compute(a,  b) + tail"
+        new, count, _, err = fuzzy_find_and_replace(
+            content, "compute(a, b)", "compute(a, b, c)"
+        )
+        assert err is None
+        assert count == 1
+        assert new == "result = compute(a, b, c) + tail"
+
+
 class TestIndentDifference:
     def test_different_indentation(self):
         content = "    def foo():\n        pass"

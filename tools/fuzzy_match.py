@@ -768,9 +768,13 @@ def _map_normalized_positions(original: str, normalized: str,
         else:
             orig_end = orig_start + (norm_end - norm_start)
         
-        # Expand to include trailing whitespace that was normalized
-        while orig_end < len(original) and original[orig_end] in ' \t':
-            orig_end += 1
+        # Expand to include trailing whitespace that was collapsed *inside*
+        # the match — but only when the match itself ended on whitespace.
+        # Otherwise we'd swallow the word-boundary space that separates the
+        # match from the following token, silently corrupting the edit (#52491).
+        if orig_end > orig_start and original[orig_end - 1] in ' \t':
+            while orig_end < len(original) and original[orig_end] in ' \t':
+                orig_end += 1
         
         original_matches.append((orig_start, min(orig_end, len(original))))
     
